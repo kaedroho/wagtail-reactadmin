@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "wagtail.admin",
     ...
 ]
+```
 
 Then, in your `urls.py`, replace the import for `wagtail.admin.urls` with `wagtail_reactadmin.urls`:
 
@@ -33,7 +34,7 @@ urlpatterns = [
 ]
 ```
 
-That's it!
+That's it! Your admin is now a React app
 
 ## Project status
 
