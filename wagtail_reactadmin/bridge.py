@@ -11,7 +11,7 @@ from rest_framework.response import Response as DRFResponse
 from wagtail.admin.telepath import registry
 
 from django_bridge.conf import DjangoBridgeConfig
-from django_bridge.response import Response, process_response, get_messages
+from django_bridge.response import Response, process_response
 
 from . import context_providers
 
@@ -35,6 +35,17 @@ config = DjangoBridgeConfig(
 )
 
 
+def format_messages(messagelist):
+    default_level_tag = messages.DEFAULT_TAGS[messages.SUCCESS]
+    return [
+        {
+            "level": messages.DEFAULT_TAGS.get(message.level, default_level_tag),
+            "html": conditional_escape(message.message),
+        }
+        for message in messagelist
+    ]
+
+
 def convert_response_to_django_bridge(view_func):
     """
     Converts legacy HTML responses to Django Bridge responses.
@@ -44,6 +55,10 @@ def convert_response_to_django_bridge(view_func):
 
     @functools.wraps(view_func)
     def wrapper(request, *args, **kwargs):
+        # Extract existing messages, see message logic handling below
+        previous_messages = list(messages.get_messages(request))
+
+        # Run the view function
         response = view_func(request, *args, **kwargs)
 
         # Ignore Django REST framework responses
@@ -72,11 +87,16 @@ def convert_response_to_django_bridge(view_func):
             )
 
             # Wagtail uses messages to put static banners at the top of the page
-            # If this request is a GET request, remove the messages so
-            # they don't show up as toast messages
+            # If this request is a GET request, remove any new messages that were
+            # inserted and put them in the "banners" prop so they are rendered at
+            # the top of the page instead of as a toast message.
             if request.method == "GET":
-                response.props["banners"] = response.messages
-                response.messages = []
+                current_messages = list(messages.get_messages(request))
+                response.props["banners"] = format_messages([
+                    message for message in current_messages
+                    if message not in previous_messages
+                ])
+                response.messages = format_messages(previous_messages)
 
         # Render the response with Django bridge
         # Note, the render_response helper acts like the django-bridge middleware
