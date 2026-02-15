@@ -91,6 +91,10 @@
                 };
 
                 const onLoad = () => {
+                    // Use replaceState to update the window.location.href without reloading the page
+                    // Wagtail's JavaScript references window.location.href all over the place.
+                    window.history.replaceState(null, document.title, event.data.path);
+
                     // Messages that are generated on GET requests are passed through
                     // as "banners". These need to be manually reinserted to appear
                     // at the top.
