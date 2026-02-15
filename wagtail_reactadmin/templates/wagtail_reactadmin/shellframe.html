@@ -91,6 +91,22 @@
                 };
 
                 const onLoad = () => {
+                    // Messages that are generated on GET requests are passed through
+                    // as "banners". These need to be manually reinserted to appear
+                    // at the top.
+                    // Messages that are generated on POST requests are treated as
+                    // toast messages and handled by the shell.
+                    event.data.banners.forEach((banner) => {
+                      const liTag = document.createElement('li');
+                      liTag.classList = banner.level;
+                      if (banner.html) {
+                        liTag.innerHTML = banner.html;
+                      } else {
+                        liTag.innerText = banner.text;
+                      }
+                      document.querySelector("[data-w-messages-target]").appendChild(liTag);
+                    });
+
                     // Insert a <base target="_parent"> tag into the <head> of the iframe
                     // This makes it open all links in the main window
                     const baseElement = document.createElement('base');
@@ -139,13 +155,16 @@
                     }, "*");
                 };
 
-                // Chrome/Edge load the document immedately and doesn't bother to fire DOMContentLoaded most of the time
-                // Firefox never loads the document immediately and always fires DOMContentLoaded
-                if (document.body) {
+                // Wait for the new content to render
+                // Note that DOMContentLoaded would've already fired at this point
+                function waitForContent() {
+                  if (document.querySelector(".content-wrapper")) {
                     onLoad();
-                } else {
-                    document.addEventListener('DOMContentLoaded', onLoad);
+                  } else {
+                    requestAnimationFrame(waitForContent);
+                  }
                 }
+                requestAnimationFrame(waitForContent);
             }, false);
         </script>
     </body>

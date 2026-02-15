@@ -2,14 +2,16 @@ import functools
 import os
 import pathlib
 
+from django.contrib import messages
 from django.middleware.csrf import get_token
 from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.utils.html import conditional_escape
 from rest_framework.response import Response as DRFResponse
 from wagtail.admin.telepath import registry
 
 from django_bridge.conf import DjangoBridgeConfig
-from django_bridge.response import Response, process_response
+from django_bridge.response import Response, process_response, get_messages
 
 from . import context_providers
 
@@ -58,11 +60,23 @@ def convert_response_to_django_bridge(view_func):
                 html = response.render().text
             else:
                 html = response.content.decode("utf-8")
+
             response = Response(
                 request,
                 "HTMLPage",
-                {"html": html, "frameUrl": reverse("shell-frame")},
+                {
+                    "html": html,
+                    "frameUrl": reverse("shell-frame"),
+                    "banners": [],
+                },
             )
+
+            # Wagtail uses messages to put static banners at the top of the page
+            # If this request is a GET request, remove the messages so
+            # they don't show up as toast messages
+            if request.method == "GET":
+                response.props["banners"] = response.messages
+                response.messages = []
 
         # Render the response with Django bridge
         # Note, the render_response helper acts like the django-bridge middleware

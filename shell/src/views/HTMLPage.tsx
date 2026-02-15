@@ -1,6 +1,7 @@
 import {
   NavigationContext,
   useShouldReloadCallback,
+  Message,
 } from "@django-bridge/react";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import Layout from "../components/Layout";
@@ -44,9 +45,10 @@ window.addEventListener("message", (event) => {
 interface HTMLPageProps {
   frameUrl: string;
   html: string;
+  banners: Message[];
 }
 
-export default function Frame({ frameUrl, html }: HTMLPageProps) {
+export default function Frame({ frameUrl, html, banners }: HTMLPageProps) {
   const {
     frameId: currentFrameId,
     path,
@@ -68,6 +70,7 @@ export default function Frame({ frameUrl, html }: HTMLPageProps) {
         e.target.contentWindow.postMessage(
           {
             html,
+            banners,
             path,
             frameId,
           },
@@ -108,7 +111,7 @@ export default function Frame({ frameUrl, html }: HTMLPageProps) {
         };
       }
     },
-    [backFrameId, html, path, navigate, submitForm],
+    [backFrameId, html, banners, path, navigate, submitForm],
   );
 
   const frames = [];
