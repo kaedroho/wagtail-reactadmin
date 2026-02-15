@@ -1,0 +1,55 @@
+import { useContext } from "react";
+import { styled } from "@linaria/react";
+
+import { gettext } from "../../utils/gettext";
+import Icon from "../Icon";
+import { UrlsContext } from "../../contexts";
+
+const SeeMoreLink = styled.a`
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  padding: 1em;
+  background: var(--w-color-black-35);
+  color: var(--w-color-text-label-menus-default);
+
+  &:focus {
+    color: var(--w-color-text-label-menus-active);
+    background: var(--w-color-black-50);
+  }
+
+  &:hover {
+    color: var(--w-color-text-label-menus-active);
+    background: var(--w-color-black-50);
+  }
+
+  @media (min-width: 640px) {
+    padding: 1em 1.75em;
+    height: 50px;
+  }
+`;
+
+interface PageCountProps {
+  page: {
+    id: number;
+    children: {
+      count: number;
+    };
+  };
+}
+
+export default function PageCount({ page }: PageCountProps) {
+  const urls = useContext(UrlsContext);
+  const count = page.children.count;
+
+  if (!count) {
+    return <></>;
+  }
+
+  return (
+    <SeeMoreLink href={`${urls.pages}${page.id}/`}>
+      {gettext("See all {} pages").replace("{}", count.toString())}
+      <Icon name="arrow-right" />
+    </SeeMoreLink>
+  );
+}

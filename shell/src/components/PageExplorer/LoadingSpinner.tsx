@@ -1,0 +1,14 @@
+import { gettext } from "../../utils/gettext";
+import Icon from "../Icon";
+
+/**
+ * A loading indicator with a text label next to it.
+ */
+const LoadingSpinner = () => (
+  <span>
+    <Icon name="spinner" className="w-spinner" />
+    {` ${gettext("Loading…")}`}
+  </span>
+);
+
+export default LoadingSpinner;

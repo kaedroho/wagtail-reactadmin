@@ -1,0 +1,170 @@
+import { useContext } from "react";
+import { styled } from "@linaria/react";
+
+import { gettext } from "../../utils/gettext";
+import Icon from "../Icon";
+import Link from "./Link";
+import PublicationStatus from "./PublicationStatus";
+import { PageState } from "./types";
+import { UrlsContext, LocalesContext } from "../../contexts";
+
+const ItemWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  border: 0;
+  border-bottom-width: 1px;
+  border-style: solid;
+  border-color: var(--w-color-surface-menus);
+
+  > * + * {
+    border-left: 1px solid var(--w-color-surface-menus);
+  }
+`;
+
+const ItemLink = styled(Link)`
+  display: inline-flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  flex-grow: 1;
+  cursor: pointer;
+  gap: 0.25rem;
+  transition:
+    background-color 150ms ease-in-out,
+    color 150ms ease-in-out;
+  padding: 1.45em 1em;
+  color: var(--w-color-text-label-menus-default);
+
+  &:hover,
+  &:focus {
+    background-color: var(--w-color-surface-menus);
+    color: var(--w-color-text-label-menus-active);
+  }
+
+  @media (min-width: 640px) {
+    align-items: center;
+    padding: 1.45em 1.75em;
+  }
+`;
+
+const ItemTitle = styled.h3<{ hasChildren: boolean }>`
+  margin: 0;
+  color: var(--w-color-text-label-menus-default);
+  display: inline-block;
+  font-weight: 400;
+  line-height: 1.3;
+  margin-left: ${(props) => (props.hasChildren ? "0.2em" : "0em")};
+`;
+
+const ItemAction = styled(Link)`
+  color: var(--w-color-text-label-menus-default);
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 50px;
+  padding: 0 0.4em;
+  line-height: 1;
+  font-size: 2em;
+  cursor: pointer;
+
+  &.small {
+    font-size: 1.2em;
+  }
+
+  &:hover,
+  &:focus {
+    background-color: var(--w-color-surface-menus);
+    color: var(--w-color-text-label-menus-active);
+  }
+`;
+
+const MetaWrapper = styled.span`
+  display: flex;
+  gap: 0.5rem;
+  color: var(--w-color-text-label-menus-default);
+  font-size: 12px;
+`;
+
+// Hoist icons in the explorer item, as it is re-rendered many times.
+const childrenIcon = <Icon name="folder-inverse" className="icon--menuitem" />;
+
+interface PageExplorerItemProps {
+  item: PageState;
+  onClick(e: React.MouseEvent): void;
+  navigate(url: string): Promise<void>;
+}
+
+/**
+ * One menu item in the page explorer, with different available actions
+ * and information depending on the metadata of the page.
+ */
+export default function PageExplorerItem({
+  item,
+  onClick,
+  navigate,
+}: PageExplorerItemProps) {
+  const urls = useContext(UrlsContext);
+  const locales = useContext(LocalesContext);
+
+  const localeNames = locales.reduce(
+    (locales, { code, display_name: displayName }) => {
+      locales.set(code, displayName);
+      return locales;
+    },
+    new Map<string, string>(),
+  );
+
+  const { id, admin_display_title: title, meta } = item;
+  const hasChildren = meta.children.count > 0;
+  const isPublished = meta.status.live && !meta.status.has_unpublished_changes;
+  const localeName =
+    meta.parent?.id === 1 &&
+    meta.locale &&
+    (localeNames.get(meta.locale) || meta.locale);
+
+  return (
+    <ItemWrapper>
+      <ItemLink href={`${urls.pages}${id}/`} navigate={navigate}>
+        {hasChildren ? childrenIcon : null}
+        <ItemTitle hasChildren={hasChildren}>{title}</ItemTitle>
+
+        {(!isPublished || localeName) && (
+          <MetaWrapper>
+            {localeName && <span className="c-status">{localeName}</span>}
+            {!isPublished && <PublicationStatus status={meta.status} />}
+          </MetaWrapper>
+        )}
+      </ItemLink>
+      <ItemAction
+        href={`${urls.pages}${id}/edit/`}
+        navigate={navigate}
+        className="small"
+      >
+        <Icon
+          name="edit"
+          title={gettext("Edit '%(title)s'").replace("%(title)s", title || "")}
+        />
+      </ItemAction>
+      {hasChildren ? (
+        <ItemAction
+          onClick={onClick}
+          href={`${urls.pages}${id}/`}
+          navigate={navigate}
+        >
+          <Icon
+            name="arrow-right"
+            className="icon--item-action"
+            title={gettext("View child pages of '%(title)s'").replace(
+              "%(title)s",
+              title || "",
+            )}
+          />
+        </ItemAction>
+      ) : null}
+    </ItemWrapper>
+  );
+}

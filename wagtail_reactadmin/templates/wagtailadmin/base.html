@@ -1,0 +1,20 @@
+{% extends "wagtailadmin/admin_base.html" %}
+{% load wagtailadmin_tags wagtailcore_tags i18n %}
+
+{% block furniture %}
+    <template data-wagtail-sidebar-branding-logo>{% block branding_logo %}{% endblock %}</template>
+    {% keyboard_shortcuts_dialog %}
+    <main class="content-wrapper w-overflow-x-hidden" id="main">
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .wrapper {
+            padding-inline-start: 0;
+        }
+    </style>
+{% endblock %}
