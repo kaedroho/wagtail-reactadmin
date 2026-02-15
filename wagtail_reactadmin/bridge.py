@@ -6,6 +6,7 @@ from django.middleware.csrf import get_token
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from rest_framework.response import Response as DRFResponse
+from wagtail.admin.telepath import registry
 
 from django_bridge.conf import DjangoBridgeConfig
 from django_bridge.response import Response, process_response
@@ -28,6 +29,7 @@ config = DjangoBridgeConfig(
         "admin_api": context_providers.admin_api,
         "sidebar": context_providers.sidebar_props,
     },
+    adapter_registry=registry,
 )
 
 
