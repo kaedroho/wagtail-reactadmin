@@ -8,6 +8,13 @@ Goals:
 - Add new interfaces to Wagtail with pure React
 - Full backwards compatibility for all HTML rendered views
 
+Technical approach:
+
+- Vanilla React (no state management libraries)
+- [Linaria](https://linaria.dev/) for all styling (CSS in JS)
+- [Django Bridge](https://django-bridge.org/) and [Telepath](https://wagtail.github.io/telepath/) for React-Django integration
+- [Vite](https://vite.dev/) for bundling (simple config, hot module reloading)
+
 Current status:
 
  - It works!
