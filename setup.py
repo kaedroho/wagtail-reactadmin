@@ -36,7 +36,9 @@ setup(
         "Framework :: Wagtail :: 7.2",
         "Framework :: Wagtail :: 7.3",
     ],
-    install_requires=[],
+    install_requires=[
+        "django-bridge==0.6.0"
+    ],
     extras_require={},
     zip_safe=False,
 )
