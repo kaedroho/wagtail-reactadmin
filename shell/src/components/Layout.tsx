@@ -1,4 +1,4 @@
-import { PropsWithChildren, useContext } from "react";
+import { PropsWithChildren, useCallback, useContext, useRef, useState, useEffect } from "react";
 import { css } from "@linaria/core";
 import { styled } from "@linaria/react";
 import {
@@ -10,6 +10,7 @@ import Sidebar from "./Sidebar/Sidebar";
 import { SidebarContext } from "../contexts";
 import { useLocalStorage } from "../utils/hooks";
 import Icon from "./Icon";
+
 
 export const globals = css`
   :global() {
@@ -306,17 +307,36 @@ const DismissButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
 
   &:hover {
-    svg {
+    svg.x-icon {
       color: rgb(46, 31, 94);
     }
   }
 
-  svg {
+  svg.x-icon {
     width: 1rem;
     height: 1rem;
     color: rgb(92, 92, 92);
+    position: relative;
+    z-index: 1;
+  }
+
+  svg.progress-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    transform: rotate(-90deg);
+    circle {
+      fill: none;
+      stroke-width: 2;
+    }
   }
 `;
 
@@ -330,6 +350,91 @@ const MainContentWrapper = styled.div`
     width var(--sidebar-transition-duration) ease-in-out,
     left var(--sidebar-transition-duration) ease-in-out;
 `;
+
+const TOAST_DURATION = 10000;
+
+function ToastMessage({ message, onDismiss }: { message: Message; onDismiss: () => void }) {
+  const [progress, setProgress] = useState(1); // 1 = full, 0 = empty
+  const [visible, setVisible] = useState(true);
+  const startTimeRef = useRef<number>(Date.now());
+  const remainingRef = useRef<number>(TOAST_DURATION);
+  const rafRef = useRef<number>();
+  const hoveredRef = useRef(false);
+
+  const dismiss = useCallback(() => {
+    setVisible(false);
+    setTimeout(onDismiss, 300);
+  }, [onDismiss]);
+
+  useEffect(() => {
+    const tick = () => {
+      if (!hoveredRef.current) {
+        const elapsed = Date.now() - startTimeRef.current;
+        const remaining = remainingRef.current - elapsed;
+        setProgress(Math.max(0, remaining / TOAST_DURATION));
+        if (remaining <= 0) {
+          dismiss();
+          return;
+        }
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current!);
+  }, [dismiss]);
+
+  const handleMouseEnter = () => {
+    hoveredRef.current = true;
+    remainingRef.current -= Date.now() - startTimeRef.current;
+  };
+
+  const handleMouseLeave = () => {
+    hoveredRef.current = false;
+    startTimeRef.current = Date.now();
+  };
+
+  const radius = 10;
+  const circumference = 2 * Math.PI * radius;
+
+  return (
+    <MessageItem
+      level={message.level}
+      style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateX(0)' : 'translateX(110%)', transition: 'opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease' }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {(message.level === "error" || message.level === "warning") && (
+        <Icon name="warning" />
+      )}
+      {message.level === "success" && <Icon name="success" />}
+      {message.level === "info" && <Icon name="info-circle" />}
+      {"html" in message && (
+        <div
+          className="message-content"
+          dangerouslySetInnerHTML={{ __html: message.html }}
+        />
+      )}
+      {"text" in message && (
+        <div className="message-content">{message.text}</div>
+      )}
+      <DismissButton onClick={dismiss}>
+        <svg className="progress-ring" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r={radius} stroke="#ccc" strokeDasharray={circumference} strokeDashoffset={0} />
+          <circle
+            cx="12" cy="12" r={radius}
+            stroke="currentColor"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - progress)}
+            style={{ transition: 'stroke-dashoffset 0.1s linear', color: messageColors[message.level]?.border ?? messageColors.info.border }}
+          />
+        </svg>
+        <svg className="x-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </DismissButton>
+    </MessageItem>
+  );
+}
 
 export default function Layout({ children }: PropsWithChildren) {
   const { navigate, path } = useContext(NavigationContext);
@@ -354,26 +459,12 @@ export default function Layout({ children }: PropsWithChildren) {
         />
       )}
       <MessagesWrapper>
-        {messages.map((message) => (
-          <MessageItem level={message.level}>
-            {(message.level === "error" || message.level === "warning") && (
-              <Icon name="warning" />
-            )}
-            {message.level === "success" && <Icon name="success" />}
-            {message.level === "info" && <Icon name="info" />}
-            {"html" in message && (
-              <div
-                className="message-content"
-                dangerouslySetInnerHTML={{ __html: message.html }}
-              />
-            )}
-            {"text" in message && (
-              <div className="message-content">{message.text}</div>
-            )}
-            <DismissButton aria-label="Dismiss message">
-              <Icon name="cross" />
-            </DismissButton>
-          </MessageItem>
+        {messages.map((message, index) => (
+          <ToastMessage
+            key={index}
+            message={message}
+            onDismiss={() => {}}
+          />
         ))}
       </MessagesWrapper>
       <MainContentWrapper>{children}</MainContentWrapper>
