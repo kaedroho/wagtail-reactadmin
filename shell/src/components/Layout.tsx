@@ -407,7 +407,7 @@ function ToastMessage({ message, onDismiss }: { message: Message; onDismiss: () 
         <Icon name="warning" />
       )}
       {message.level === "success" && <Icon name="success" />}
-      {message.level === "info" && <Icon name="info-circle" />}
+      {message.level === "info" && <Icon name="info" />}
       {"html" in message && (
         <div
           className="message-content"
@@ -417,7 +417,7 @@ function ToastMessage({ message, onDismiss }: { message: Message; onDismiss: () 
       {"text" in message && (
         <div className="message-content">{message.text}</div>
       )}
-      <DismissButton onClick={dismiss}>
+      <DismissButton onClick={dismiss} aria-label="Dismiss message">
         <svg className="progress-ring" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r={radius} stroke="#ccc" strokeDasharray={circumference} strokeDashoffset={0} />
           <circle
