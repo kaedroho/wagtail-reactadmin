@@ -5,6 +5,11 @@ from wagtail.admin.urls import urlpatterns
 from wagtail.utils.urlpatterns import decorate_urlpatterns
 
 from .bridge import convert_response_to_django_bridge
+from .editor import views as editor_views
+
+urlpatterns = [
+    path("pages/<int:page_id>/edit/", editor_views.ReactPageEditView.as_view()),
+] + urlpatterns
 
 urlpatterns = [
     path(
