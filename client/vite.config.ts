@@ -8,7 +8,9 @@ export default defineConfig({
   build: {
     manifest: true,
     rollupOptions: {
-      input: "/src/main.tsx",
+      input: {
+        shell: "/src/shell/main.tsx",
+      },
     },
     outDir: "../wagtail_reactadmin/static",
   },

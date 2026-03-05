@@ -19,7 +19,7 @@ VITE_DEVSERVER_URL = os.environ.get("VITE_DEVSERVER_URL")
 config = DjangoBridgeConfig(
     bootstrap_template="wagtail_reactadmin/shell.html",
     framework="react",
-    entry_point="src/main.tsx",
+    entry_point="src/shell/main.tsx",
     vite_devserver_url=VITE_DEVSERVER_URL,
     vite_bundle_dir=pathlib.Path(__file__).parent / "static"
     if VITE_DEVSERVER_URL is None
