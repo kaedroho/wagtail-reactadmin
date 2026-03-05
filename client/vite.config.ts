@@ -10,6 +10,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         shell: "/src/shell/main.tsx",
+        editor: "/src/editor/main.tsx",
       },
     },
     outDir: "../wagtail_reactadmin/static",
