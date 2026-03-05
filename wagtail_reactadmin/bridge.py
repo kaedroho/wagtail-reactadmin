@@ -11,7 +11,7 @@ from rest_framework.response import Response as DRFResponse
 from wagtail.admin.telepath import registry
 
 from django_bridge.conf import DjangoBridgeConfig
-from django_bridge.response import Response, process_response
+from django_bridge.response import BaseResponse, Response, process_response
 
 from . import context_providers
 
@@ -70,6 +70,7 @@ def convert_response_to_django_bridge(view_func):
             response.status_code != 302
             and response["Content-Type"].startswith("text/html")
             and not request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest"
+            and not isinstance(response, BaseResponse)
         ):
             if isinstance(response, TemplateResponse):
                 html = response.render().text
